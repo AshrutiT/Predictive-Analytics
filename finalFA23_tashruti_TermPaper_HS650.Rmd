@@ -1,0 +1,528 @@
+---
+title: "HS650_FinalReport_Fall2023"
+subtitle: "HW 5 Fall 2023, DSPA (HS650)"
+author: "Name: Ashruti Tuteja, (SID: 5432), tashruti@umich.edu"
+date: "`r format(Sys.time(), '%B %Y')`"
+tags: [DSPA, SOCR, MIDAS, Big Data, Predictive Analytics] 
+output:
+  html_document:
+    theme: cerulean 
+    highlight: tango
+    toc: true
+    number_sections: false
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_folding: show
+    self_contained: yes	
+      
+---
+-   SID: ####5432
+-   UMich E-mail: [tashruti\@umich.edu](mailto:tashruti@umich.edu){.email}
+-   Declaration:
+I certify that the following paper represents my own independent work and conforms with the guidelines of academic honesty described in the UMich student handbook.
+
+# 1. Background
+
+I am planning to explore MIMIC data, to understand the trend and prevalence of chronic diseases in the presence of various physiological conditions amongst ICU admitted patients.
+Chronic Heart Failure (CHF) presents a significant challenge in healthcare, requiring a nuanced understanding of prognosis to tailor effective patient care. Typically, individuals diagnosed with CHF face a survival period of less than a year. However, recent 2023 statistics from the United States indicate a more varied picture, with certain studies suggesting an average survival of up to 5 years post-diagnosis. This discrepancy underscores the need for precise prognostic tools and individualized care plans to improve the quality of life for CHF patients.
+
+To gain insights into the factors influencing CHF prognosis, my study delves into the Multiparameter Intelligent Monitoring in Intensive Care II (MIMIC-II) database. This publicly available resource for intensive care research enables a comprehensive analysis, incorporating variables such as age groups and SAPS scores. By exploring these dimensions, my aim is to contribute valuable information that can guide healthcare professionals in refining their prognostic assessments and, ultimately, enhancing patient outcomes.
+
+
+# 2. Abstract
+
+This project focuses on understanding and predicting the prognosis of Congestive Heart Failure (CHF) to improve patient care. The background research reveals a typical survival period of less than a year for CHF patients. Utilizing the Multiparameter Intelligent Monitoring in Intensive Care II (MIMIC-II) database, the study incorporates key factors such as age groups and SAPS scores to establish correlations with CHF mortality rates. The project aims to provide valuable insights into the multifaceted aspects of CHF prognosis, aiding healthcare professionals in refining their assessments and optimizing care plans. Through this, **I anticipate contributing to an improved understanding of CHF and enhanced patient care strategies**.
+
+
+# 3. Preliminary Steps
+
+**Dataset** 
+This dataset was created for the purpose of a case study in the book: Secondary Analysis of Electronic Health Records, published by Springer in 2016. The dataset is derived from MIMIC-II, the publicly-accessible critical care database. The dataset (full_cohort_data.csv) is a comma-separated value file that includes a header with descriptive variable names. The main purpose of the dataset was to list the physilogical factors and intensive care parameters for a critical patient in a Hospital.
+
+The dataset contains 1776 rows (each patient) and 46 columns (physiological and anatomical factors).
+
+**To Access the dataset**
+Clinical data from the MIMIC-II database for a case study on indwelling arterial catheters. https://physionet.org/content/mimic2-iaccd/1.0/
+Indwelling arterial catheters (IACs) are used extensively in the ICU for hemodynamic monitoring and for blood gas analysis. IAC use also poses potentially serious risks, including bloodstream infections and vascular complications. In 2015, Hsu et al published a study to assess whether IAC use was associated with mortality in patients who are mechanically ventilated and do not require vasopressor support.
+
+The dataset in question was used throughout Chapter 16 (Data Analysis) by Raffa J. et al. to investigate the effectiveness of indwelling arterial catheters in hemodynamically stable patients with respiratory failure for mortality outcomes.
+
+**Primary Usage of the Dataset** 
+MIMIC-II provides a diverse array of patient data, including demographics, vital signs, and laboratory results, offering a comprehensive foundation for exploring various facets of intensive care research. Its extensive scope and detailed information make it a valuable tool for uncovering insights into critical care outcomes and refining healthcare practices.
+This dataset walks us through a meticulous examination of the impact of *indwelling arterial catheters (IAC) on 28-day mortality within the intensive care unit (ICU), focusing on patients subjected to mechanical ventilation during their initial day of ICU admission.*
+
+**Data Glossary** 
+SAPS score: Estimates the probability of mortality for ICU patients on admission.
+The SAPS III Admission Scores help sort patients based on how serious their condition is expected to be. This scoring system looks at things like the patient's health before coming to the ICU, the reasons for their ICU admission, and how are their body functions impacted when they get to the ICU. By using this system, doctors can quickly figure out the best way to care for each patient, aiming to improve their well-being and satisfaction.
+ 
+SOFA score: The Sequential Organ Failure Assessment (SOFA) score is a scoring system that assesses the performance of several organ systems in the body (neurologic, blood, liver, kidney, and blood pressure/hemodynamics).
+
+IAC: Indwelling arterial catheters (IACs) are used extensively in the ICU for hemodynamic monitoring and for blood gas analysis.
+
+**A glimpse of datset**
+46 columns: Each column is a physiological factor for each patient amongst 1776 patients in the dataset.
+
+Most of the columns seem to contain either integer or float values. Continuous data values make it easier for analysis.
+Descriptive Statistics:- Count: Some values are missing from various columns, as count varies in each columns
+Mean: age is 54, SAPS score is 14, SOFA score 5.8
+Min & max: reveals the extreme  values for various physiological factors, like for platelet 7 (min), 988 (max)
+The quantiles: if plotted will boxplot will help us determining outliers for each of the physiological factors.
+
+**Strengths and Weaknesses of the Dataset** 
+Strengths:
+- Reliable dataset – MIMIC is reputed and open data source for medical data
+- Extensive – incorporating many attributes (~46 columns)
+- Meaningfulness - Data dictionary is self-explanatory
+- Completeness – Less missing values
+Weakness:
+- Less instances – 1776 rows depicting 1776 patients
+- Validity – source is unknown, open-source data set and can be accessed by everyone
+
+
+# 4. Methodology
+The study would help us to have an idea on how various physiological (or, also, anatomical factors) impact the prevalence of chronic diseases to overall affect the SAPS score of the patient. 
+
+### PICO
+**P-Population**
+The population is the patients requiring mechanical ventilation who did not require vasopressors or have a diagnosis of sepsis were identified, and the primary outcome was 28-day mortality. MIMIC data, represents population with SAPS score between '5-15' identifying risk of mortality of the patient in the ICU based on the severity of the disease condition. 
+
+**I-Intervention or Exposure Variable**
+Amongst various chronic diseases, I focus on 'Congestive heart failure (chf_flg)' which is a binary variable where 0 indicates the negative outcome and 1 indicates the positive outcome. 
+
+**C-Comparison**
+I want to look at two groups of patients: one with congestive heart failure and another without congestive heart failure. When I checked the data, I noticed that congestive heart failure and chronic renal disease show correlation of 0.25 with Mortality. The connection is stronger compared to other chronic factors. So, I decided to focus on congestive heart failure as the major factor of this study and chronic kidney disease as another variable of focus.
+
+**O-Outcome Variable**
+"censor_flg" is the outcome variable which indicates 'censored or death'. It is a binary variable indicative of death when equal to 0 and indicative of censored when equal to 1. Also, because the SAPS score is an indication of mortality, hence it was more relevant to choose mortality as an outcome variable. 
+
+
+## Health Related Question
+To determine the mortality rate among individuals with SAPS scores ranging from 5 to 15, stratified by age groups, among patients admitted to the ICU, considering both those with and without heart disease.
+
+**Confounder(s)** 
+In the dataset, there are several factors that could affect the results, and one of them is a categorical variable called chronic renal disease (renal_flg). Medically, it's known that having chronic kidney disease (CKD) makes it more likely for a person to also have heart disease [American Kidney Fund. (2022, February 15)]. CKD can lead to heart disease, and vice versa. Heart disease is actually the most common cause of death among people on dialysis. Considering renal disease as a confounding factor is important because it can impact both the chances of having heart disease and the likelihood of mortality.
+Another factor to consider is a continuous variable called hemoglobin count (hgb_first), which is measured when a patient is admitted to the ICU. Indwelling arterial catheters (IACs) are used extensively in the ICU for hemodynamic monitoring and for blood gas analysis.Low hemoglobin levels in patients with congestive heart failure (CHF) have been found to be linked to a higher risk of hospitalization and overall mortality. Studies indicate a clear connection between lower hemoglobin levels and an increased risk of death. 
+
+**Data Preparation**
+After initial data importing and setup, I sorted the data, cleaned it, and checked for missingness using the `naniar` package. I performed exploratory data analysis on various variables (both categorical and continuous) to hypothesize the question. Later, I used Clustering to find the most frequent number of clusters, PCA to check the dimensionality of the dataset, and feature selection using the `boruta` package before moving to the model selection and evaluating performances. 
+
+```{r echo=TRUE}
+knitr::opts_chunk$set(echo=T, warning = F, message = F) 
+```
+
+```{r echo=TRUE}
+#load packages
+library(tidyverse);library(igraph);library(plotly)
+```
+
+```{r echo=TRUE}
+#Required Package
+library(tidyverse)
+library(dplyr)
+library(skimr)
+library(ggplot2)
+library(plotly)
+```
+
+```{r echo=TRUE}
+patient_data = read_csv("full_cohort_data.csv")
+```
+
+```{r echo=TRUE}
+#Select required columns
+filter_SAPS = patient_data %>% 
+  select(age,gender_num,sapsi_first,chf_flg,censor_flg,renal_flg,wbc_first,hgb_first,icu_los_day,hospital_los_day) %>%
+  filter(sapsi_first >=15) 
+
+without_conf = filter_SAPS %>%
+  mutate(agegroup = if_else(age >60, 'Above 60', 'Below 60')) %>% 
+  mutate(heart_failure = if_else(chf_flg ==0, 'Without heart disease', 'With heart disease')) %>% 
+  mutate(mortality = if_else(censor_flg == 0, 'dead', 'alive'))
+```
+- converted numeric data to binary ones (here, 3 columns)
+
+## 4.1 Finding Missigness
+```{r echo=TRUE}
+library(naniar)
+n_var_miss(without_conf)
+```
+ - No missingness: no imputations required
+
+## 4.2 2D Histogram
+
+```{r echo=TRUE}
+library(ggplot2)
+
+ggplot(without_conf, aes(wbc_first, icu_los_day)) +
+  stat_bin2d(bins=20) + 
+  labs(title = "2D Histogram of WBC count vs ICU days", x = "WBC Count", y = "Number of days in ICU")  
+```
+
+Result Interpretation:
+
+- Through initial data exploration and visualization in the MIMIC dataset analysis, it became evident that elevated White Blood Cell (WBC) counts, associated with immunity, are linked to shorter ICU stays.
+
+- Notably, patients with chronic diseases admitted to the ICU displayed an interesting trend. Those with an initial WBC count between 0 and 30 on the first day of ICU admission tended to have an extended stay in the ICU compared to individuals with an initial WBC count exceeding 30 on the first day of admission.
+
+
+## 4.3 Correlational Plot
+
+```{r}
+library(corrplot)
+# Correlation plot
+corr_conf <- cor(without_conf[1:10])
+
+library(corrplot)
+# Customizing the correlation plot
+corrplot(corr_conf, type = "upper", tl.pos = "td",
+         method = "circle", tl.cex = 0.5, tl.col = 'black',
+         order = "hclust", diag = FALSE, mar = c(1, 1, 0, 1),
+         col = colorRampPalette(c("blue", "white", "red"))(100),
+         addCoef.col = "black", number.cex = 0.5,
+         cl.lim = c(-1, 1), # Set the color scale limits
+         title = "Correlation Plot") # Add a title
+```
+
+Result Interpretation:
+
+- Utilizing a correlational plot in my analysis, I aimed to identify the variable most strongly linked to the duration of ICU stays.
+
+- The results revealed a significant correlation between the length of ICU stays and the duration of hospitalization, indicating a strong association between these two variables.
+
+
+## 4.4 3-D Scatter Plot
+
+```{r echo=TRUE}
+axx <- list(title = " Age")
+axy <- list(title = "icu_los_day")
+axz <- list(title = "hospital_los_day")
+awh_all <- plot_ly(x = without_conf$age, y = without_conf$icu_los_day, 
+              z= without_conf$hospital_los_day, type = "scatter3d", mode = "markers", color = ~without_conf$mortality)
+awh_all %>% layout(scene = list(xaxis=axx,yaxis=axy,zaxis=axz))
+```
+
+Result Interpretation:
+
+- Subsequently, a 3D density plot was generated to explore the relationship between age, mortality, and the lengths of stay in both the ICU and hospital. Notably, "alive" patients are represented by green dots, while "dead" patients are denoted by blue dots.
+
+- Findings from the plot indicate that individuals aged over 80 with chronic diseases tend to have shorter stays in both the hospital and ICU, coupled with a higher likelihood of mortality. On the other hand, patients in the 20 to 50 age group admitted to the ICU exhibit varying lengths of stay, influencing their chances of survival.
+
+## 4.5 k - means Clustering 
+```{r echo=TRUE}
+Clustering_Data <- without_conf[ ,c(1:10)]
+Clustering_Data1 <- Clustering_Data [,-1]
+library(tidyverse)  # data manipulation
+library(cluster)    # clustering algorithms
+library(factoextra)
+library(gridExtra)
+```
+
+```{r echo=TRUE}
+k2 <- kmeans(Clustering_Data1, centers = 2, nstart = 25)
+k3 <- kmeans(Clustering_Data1, centers = 3, nstart = 25)
+k4 <- kmeans(Clustering_Data1, centers = 4, nstart = 25)
+k5 <- kmeans(Clustering_Data1, centers = 5, nstart = 25)
+
+p2 <- fviz_cluster(k2, data = Clustering_Data1, main = "Cluster Plot",xlab = "PC1", ylab = "PC2", palette = "jco")
+p3 <- fviz_cluster(k3, data = Clustering_Data1, main = "Cluster Plot",xlab = "PC1", ylab = "PC2", palette = "jco")
+p4 <- fviz_cluster(k4, data = Clustering_Data1, main = "Cluster Plot",xlab = "PC1", ylab = "PC2", palette = "jco")
+p5 <- fviz_cluster(k5, data = Clustering_Data1, main = "Cluster Plot",xlab = "PC1", ylab = "PC2", palette = "jco")
+
+grid.arrange(p2, p3, p4, p5, nrow = 2)
+```
+
+```{r echo=TRUE}
+print(k2)
+```
+
+```{r echo=TRUE}
+set.seed(123)
+library(ggplot2)
+library(tidyverse)  # data manipulation
+library(cluster)    # clustering algorithms
+library(factoextra)
+ggplot(data = Clustering_Data1, aes(x = k3$cluster)) +
+  geom_bar(aes(fill = Clustering_Data1$researchGroup, fill = "orange")) +  ggtitle("Bar Plot k Means") +
+  labs(y = "Count of data points", x = "Cluster")
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r echo=TRUE}
+silhoutte <- fviz_nbclust(Clustering_Data1, kmeans, method = "silhouette")
+silhoutte
+```
+
+
+Result Interpretation:
+
+- The bar plot generated by the k-means clustering algorithm illustrates the distribution of data across 1, 2, or 3 clusters. Notably, it suggests that 2 or 3 clusters effectively capture the representation of the data.
+
+- Further insights from the silhouette plot indicate that the optimal number of clusters representing the data is 2, reinforcing the conclusion drawn from the bar plot.
+
+
+## 4.6 PCA
+
+A PCA chart typically displays how the data points in a multivariate dataset project onto the principal components.
+
+```{r echo=TRUE}
+without_conf.pca <- prcomp(without_conf[,c(1:9)], center = TRUE,scale. = TRUE)
+
+summary(without_conf.pca)
+```
+
+```{r echo=TRUE}
+library(ggbiplot)
+# Basic ggbiplot
+ggbiplot(without_conf.pca, obs.scale = 1, var.scale = 1, groups = without_conf$GroupingVariable)
+```
+
+```{r echo=TRUE}
+# Customized ggbiplot with additional parameters
+ggbiplot(without_conf.pca,
+         obs.scale = 1, var.scale = 1,
+         groups = without_conf$GroupingVariable,
+         ellipse = TRUE, ellipse.prob = 0.68, # Add ellipses with 68% confidence
+         circle = TRUE, # Add a unit circle
+         varname.size = 4, varname.adjust = 1.5, # Adjust size and position of variable names
+         varname.abbrev = TRUE, # Abbreviate variable names
+         var.axes = TRUE, # Add arrows for variable axes
+         labels = rownames(without_conf), # Add labels for data points
+         label.size = 3, # Adjust size of labels
+         alpha = 0.5, # Set transparency of points
+         shape = without_conf$ShapeVariable, # Use different shapes for data points
+         legend = TRUE, # Display legend
+         biplot = TRUE, # Display biplot
+         loadings = "variance", # Show variable loadings as proportion of variance
+         loadings.label = TRUE, # Show variable names for loadings
+         loadings.label.size = 3, # Adjust size of loading labels
+         varname.col = "blue", # Set color for variable names
+         varname.face = "bold", # Set font weight for variable names
+         varname.label = TRUE, # Show variable labels
+         varname.label.size = 3, # Adjust size of variable labels
+         varname.label.col = "red" # Set color for variable labels
+)
+
+```
+
+Result Interpretation:
+
+- The score plots reveal how the data is projected along the principal components. Points located farther from the center are likely outliers or represent naturally extreme observations.
+
+- Notably, a majority of data points exhibit a first principal component (PC) score of 0, while a few data points deviate with a first PC score of -2.
+
+
+## 4.7 Feature Selection
+
+```{r echo=TRUE}
+#install.packages("Boruta")
+library(Boruta)
+set.seed(123)
+without_conf.fs<-Boruta(sapsi_first~., data=without_conf, doTrace=0)
+print(without_conf.fs)
+```
+
+Now selected sapsi_first, heart_failure, mortality, using tentative and confirmed important attributes: 
+
+```{r echo=TRUE}
+without_conf.fs$ImpHistory[1:6, 1:10]
+```
+
+```{r echo=TRUE}
+library(plotly)
+
+df_long <- tidyr::gather(as.data.frame(without_conf.fs$ImpHistory), feature, measurement)
+
+plot_ly(df_long, x=~feature, y = ~measurement, color = ~feature, type = "box") %>%
+    layout(title="Box-and-whisker Plots for 10 Features",
+           xaxis = list(title="Features", categoryorder = "total descending"), 
+           yaxis = list(title="Importance"), showlegend=T)
+```
+
+```{r echo=TRUE}
+final.without_conf.fs<-TentativeRoughFix(without_conf.fs)
+print(final.without_conf.fs)
+
+```
+
+Result Interpretation:
+
+- After removing features with infinite importance, I organized the remaining significant features by their median importance. Using plotly, I illustrated these features through boxplots, showcasing their median, quartiles, and minimum and maximum values.
+
+- The whiskerplot enables a clear view of the importance score distribution for each variable, aiding in the identification of tentative and crucial variables. This visualization assists in assessing the range of importance scores within a single variable and may guide decisions on whether to retain or discard tentative features.
+
+
+## 4.8 Modeling and model evaluation
+
+### 4.8.1 Normalizing Data
+```{r echo=TRUE}
+normalize<-function(x){
+# be careful, the denominator may be trivial! 
+return((x-min(x))/(max(x)-min(x)))
+}
+
+without_conf_n<-as.data.frame(lapply(without_conf[,-c(11:13)], normalize))
+
+```
+
+ - Checking if normalization worked
+```{r echo=TRUE}
+summary(without_conf_n$sapsi_first)
+```
+
+### 4.8.2 Partition data
+
+```{r echo=TRUE}
+set.seed(111)
+ind <- sample(2, nrow(without_conf_n),
+              replace = TRUE,
+              prob = c(0.75, 0.25))
+training <- without_conf_n[ind==1,]
+testing <- without_conf_n[ind==2,]
+```
+
+### 4.8.3 Rpart
+
+```{r echo=TRUE}
+library("rpart") 
+set.seed(1234)
+
+without_conf_model_rpart<-rpart(censor_flg~age+chf_flg+sapsi_first+icu_los_day, method = "class", data= training, cp=0.01, minsplit=20, minbucket=7, maxdepth=30)
+
+without_conf_model_rpart  
+```
+
+```{r echo=TRUE}
+library(rpart.plot)
+rpart.plot(without_conf_model_rpart , type = 5,extra = 1,clip.right.labs = F)
+```
+
+Result Interpretation:
+
+- I divided the dataset into 75% training data and 25% test data, employing the rpart algorithm to build a classification tree. The plot above illustrates the crucial features utilized by the algorithm for observation classification.
+
+- Notably, Age and icu_los_day stood out as the most important variables for the recursive partitioning process. The plot indicates that for individuals aged above 58, a predominant outcome is "0," implying a higher incidence of patient deaths in the ICU for those aged 58 or older.
+
+### 4.8.4 K Nearest Neighbours 
+
+```{r echo=TRUE}
+library(e1071)
+#install.packages("caTools")
+library(caTools)
+library(class)
+```
+
+```{r echo=TRUE}
+# Splitting data into train and test data
+split_data <- sample.split(without_conf_n, SplitRatio = 0.8)
+train_class <- subset(without_conf_n, split = "TRUE")
+test_class <- subset(without_conf_n, split = "FALSE")
+  
+# Feature Scaling
+scale_train <- scale(train_class[, 1:10])
+scale_test <- scale(test_class[, 1:10])
+  
+# Fitting KNN Model 
+# to training dataset
+knn_model <- knn(train = scale_train,
+                      test = scale_test,
+                      cl = train_class$sapsi_first,
+                      k = 28)
+```
+
+```{r echo=TRUE}
+cm <- table(test_class$sapsi_first, knn_model)
+#cm
+```
+
+```{r echo=TRUE}
+# Model Evaluation - Choosing K
+# Calculate out of Sample error
+misClassError <- mean(knn_model != test_class$sapsi_first)
+print(paste('Accuracy =', 1-misClassError))
+```
+
+Interpretation & Analysis:
+
+- Experimenting with different values of k to train the model revealed that the highest accuracy achieved was 38% for k=28, indicating a relatively low accuracy level. In response, I proceeded to train the dataset using the Logistic Regression algorithm.
+
+### 4.8.5 Linear Models (Logistic Regression)
+
+```{r echo=TRUE}
+#install.packages('aod')
+library(aod)
+library(ggplot2)
+```
+
+```{r echo=TRUE}
+sapply(without_conf_n, sd)
+```
+
+```{r echo=TRUE}
+xtabs(censor_flg~age+chf_flg+sapsi_first+icu_los_day, data = without_conf_n)
+```
+
+```{r echo=TRUE}
+lr <- glm(censor_flg~age+chf_flg+sapsi_first+icu_los_day, data = training, family = "binomial")
+summary(lr)
+```
+
+```{r echo=TRUE}
+#calculate probability of default for each individual in test dataset
+predicted <- predict(lr, testing, type="response")
+
+#calculate AUC
+library(pROC)
+auc(testing$censor_flg, predicted)
+```
+
+Result Interpretation:
+
+- A greater Area Under the Curve (AUC) signifies enhanced model performance, indicating its proficiency in distinguishing between positive and negative classes. With an AUC of 0.71, this model's predictions demonstrate moderate accuracy and leave room for improvement.
+
+- The Akaike Information Criterion (AIC) stands at 644.26. A smaller AIC value indicates a better fit for the model, emphasizing the quality of its overall performance.
+
+
+# 5. Results 
+I experimented with two models – KNN and logistic regression. The logistic regression model emerged as the most suitable fit, with an Area Under the Curve (AUC) of 0.71. This suggests that the model achieved a 71% accuracy rate in predicting mortality, taking into account factors such as age, SAPS score at ICU admission, and the presence or absence of congestive heart failure (chf_flg=1 or chf_flg=0).
+
+# 6. Discussion
+For associations and correlations to be scientifically valid, it's crucial to ensure their reliability. In future analyses of this inquiry, we can enhance the model's robustness by collecting additional data and devising strategies to select features that truly represent the sample, making the results more meaningful. Following internal validation of the model, it's advisable to conduct pilot tests in different geographic areas for external validation, addressing any discrepancies before implementing it in real-world scenarios. It's imperative to disclose regulations preventing the model's misuse by for-profit agencies, particularly in adjusting insurance premiums based on health conditions, to prevent potential disparities.
+
+# 7. References
+
+[1] American Heart Association. (2022). Kidney Disease & Cardiovascular Disease. Website: https://www.heart.org/en/health-topics/kidney-disease/kidney-disease-and-heart-disease
+
+[2] North Carolina Institute for Public Health. (2015). Chronic Kidney Disease in North Carolina: A Public Health Surveillance Report. Report: https://sph.unc.edu/wp-content/uploads/sites/112/2015/07/nciph_ERIC11.pdf
+
+[3] Hill, A. B. (1965). The Environment and Disease: Association or Causation?
+Paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2126329/
+
+[4] Go, A. S., et al. (2015). Heart Disease and Stroke Statistics—2015 Update. Article: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4589117/
+
+[5] World Health Organization. (2023). Cardiovascular Diseases (CVDs).
+Fact Sheet: https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)
+
+[6] Lim, W. Y., et al. (2013). Ischemic Heart Disease (IHD) Mortality among Chinese and Malays in Singapore: Ethnic Variations Uncovered. Article: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3760015/
+
+[7] Morelli, A., et al. (2005). Effects of Levosimendan on Systemic and Regional Hemodynamics in Septic Myocardial Depression. Article: https://link.springer.com/article/10.1007/s00134-005-2763-5
+
+[8] Mishra, J., et al. (2021). Association Between Anemia and Mortality in Patients With Chronic Heart Failure: A Systematic Review and Meta-Analysis. Article: https://www.nature.com/articles/s41598-021-03397-3.pdf?proof=t+target%3D
+
+[9] Díez-Delhoyo, F., et al. (2021). Heart Failure in Older Adults: A Comprehensive Review from the International Heart Failure Association.Article: https://www.frontiersin.org/articles/10.3389/fcvm.2021.774935/full
+
+[10] Haq, A., et al. (2014). The Simplified Acute Physiology Score III Is Superior to the Simplified Acute Physiology Score II and Acute Physiology and Chronic Health Evaluation II in Predicting Surgical and ICU Mortality in the “Oldest Old”. Article: https://www.hindawi.com/journals/cggr/2014/934852/
+
+[11] Marik, P. E. (2006). Management of the Critically Ill Geriatric Patient. Article: https://journals.lww.com/ccmjournal/Citation/2006/09001/Management_of_the_critically_ill_geriatric_patient.20.aspx
+
+[12] Tang, Y. D., & Katz, S. D. (2006). Anemia in Chronic Heart Failure: Prevalence, Etiology, Clinical Correlates, and Treatment Options.Article: https://www.ahajournals.org/doi/full/10.1161/CIRCULATIONAHA.105.588986
+
+[13] Samaritan Healthcare & Hospice. (2020). End-Stage Heart Failure: What to Expect.Website: https://samaritannj.org/hospice-blog-and-events/hospice-palliative-care-blog/end-stage-heart-failure-what-to-expect/
+
+
+
+
+
+
